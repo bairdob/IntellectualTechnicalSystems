@@ -3,9 +3,12 @@ import json
 
 class NNClassifier:
     def __init__(self, file):
-        f = open(file)
-        self.data = json.load(f)
-        f.close()
+        try: 
+            f = open(file)
+        except OSError:
+            print('Could not open file:', file)
+        with f:
+            self.data = json.load(f)
 
     def type(self, hist: list, k: int) -> str:
         '''returns type object close to type in collections'''
@@ -13,15 +16,13 @@ class NNClassifier:
         distanceNamed = {} # {distance: 'type1', ...}
         for index, value in enumerate(self.data['collections']):
             distanceNamed[NNClassifier.histDistance(value['hist'], hist)] = value['type']
-        sortedDistanceNamed = {it: distanceNamed[it] for it in sorted(distanceNamed, reverse=True)}
+        sortedDistanceNamed = {it: distanceNamed[it] for it in sorted(distanceNamed)[0:k]}
 
         typesCnt = dict.fromkeys(set(distanceNamed.values()), 0)# {type : 0, ...}
-        for it in range(k):
-            kv = sortedDistanceNamed.popitem()
-            typesCnt[kv[1]] = typesCnt[kv[1]] + 1
-        sortedTypesCnt = {it: typesCnt[it] for it in sorted(typesCnt, reverse=True)}
+        for type in sortedDistanceNamed.values():
+            typesCnt[type] = typesCnt[type] + 1
 
-        return sortedTypesCnt.popitem()[0]
+        return sorted(typesCnt)[0]
     
     @staticmethod
     def histDistance(hist1: list, hist2:list) -> float:
