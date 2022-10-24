@@ -7,19 +7,21 @@ class NNClassifier:
         self.data = json.load(f)
         f.close()
 
-    def type(self, hist: list) -> str:
+    def type(self, hist: list, k: int) -> str:
         '''returns type object close to type in collections'''
 
-        minIndex = 0
-        minDistance = NNClassifier.histDistance(self.data['collections'][0]['hist'], hist)
-    
+        distanceNamed = {} # {distance: 'type1', ...}
         for index, value in enumerate(self.data['collections']):
-            distance = NNClassifier.histDistance(value['hist'], hist)
-            if distance < minDistance:
-                minIndex = index
-                minDistance = distance
+            distanceNamed[NNClassifier.histDistance(value['hist'], hist)] = value['type']
+        sortedDistanceNamed = {it: distanceNamed[it] for it in sorted(distanceNamed, reverse=True)}
 
-        return self.data['collections'][minIndex]['type']
+        typesCnt = dict.fromkeys(set(distanceNamed.values()), 0)# {type : 0, ...}
+        for it in range(k+1):
+            kv = sortedDistanceNamed.popitem()
+            typesCnt[kv[1]] = typesCnt[kv[1]] + 1
+        sortedTypesCnt = {it: typesCnt[it] for it in sorted(typesCnt, reverse=True)}
+
+        return sortedTypesCnt.popitem()[0]
     
     @staticmethod
     def histDistance(hist1: list, hist2:list) -> float:
@@ -33,4 +35,4 @@ class NNClassifier:
 if __name__ == '__main__':
     hist = [1, 2, 3, 4, 5]
     c = NNClassifier('collections.json')
-    print(c.type(hist))
+    print(c.type(hist, 2))
