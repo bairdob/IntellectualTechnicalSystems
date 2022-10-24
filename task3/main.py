@@ -16,7 +16,7 @@ class NNClassifier:
         sortedDistanceNamed = {it: distanceNamed[it] for it in sorted(distanceNamed, reverse=True)}
 
         typesCnt = dict.fromkeys(set(distanceNamed.values()), 0)# {type : 0, ...}
-        for it in range(k+1):
+        for it in range(k):
             kv = sortedDistanceNamed.popitem()
             typesCnt[kv[1]] = typesCnt[kv[1]] + 1
         sortedTypesCnt = {it: typesCnt[it] for it in sorted(typesCnt, reverse=True)}
@@ -35,4 +35,4 @@ class NNClassifier:
 if __name__ == '__main__':
     hist = [1, 2, 3, 4, 5]
     c = NNClassifier('collections.json')
-    print(c.type(hist, 2))
+    print(c.type(hist, 3))
