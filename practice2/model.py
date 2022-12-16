@@ -1,25 +1,32 @@
 import json
-from math import atan, sin, cos
+from math import sin, cos
 
 
 def logging(func):
     """
-    Выводит сообщение в формате time;(sgn)x;(sgn)y;angle
+    Выводит информацию в формате time;(sgn)x;(sgn)y;angle
+    и записывает все команды в файл
     """
     def wrapper(self, *argv, **kwargv):
         func(self, *argv, **kwargv)
-        print('{:.3f};{:+.1f};{:+.1f};{:.4f}'.
-              format(self.time, self.x, self.y, self.angle))
+
+        info = '{:.3f};{:+.1f};{:+.1f};{:.4f}\n'.format(
+                self.time, self.x, self.y, self.angle)
+        print(info,end='')
+
+        with open("robot.log", "a") as f:
+            f.write(info)
+
     return wrapper
 
 class RobotModel():
     """
-    Робот стоит в точке (0,0) декартовой системы координат
-    в напрaвлении оси OX
+    Начальное положение робота в точке (0,0) декартовой 
+    системы координат в напрaвлении оси OX
     """
     x = 0  # координата х
     y = 0  # координата y
-    angle = 0  # угол, в направлении которого повернут робот (в радианах)
+    angle = 0  # угол, в направлении которого повернут робот (радиан)
     velocity = 1  # линейная скорость робота
     angle_velocity = 1.5708  # угловая скорость поворота робота
     time = 0  # время отсчета начала движения
@@ -59,27 +66,55 @@ class RobotModel():
         self.angle += -self.angle_velocity * time
         self.time += time
 
-    def stop(self, time: float):
+    def stop(self):
         """
-        Записывает в csv файл, метку времени, координаты x,y и угол
+        Останавливает робот
         """
         pass
+
+    
+
 
 
 class App():
     robot = RobotModel()
 
     def process_message(self, message: str) -> dict:
+        """
+        Выводит и возвращает словарь полученный из сообщения по mqtt
+        """
         message_dict = json.loads(message)
+        print(message_dict)
         return message_dict
 
-    def send_command(cmd):
-        pass
+    def send_command_to_robot(self, message: dict):
+        """
+        Парсит сообщение и отправляет команды роботу
+        """
+        robot_cmds= {
+            'forward': self.robot.forward, 
+            'left': self.robot.left, 
+            'right': self.robot.right,
+            'stop': self.robot.stop
+        }
 
+        cmd = message['cmd']
+        val = float(message.get('val')) if message.get('val') else None
 
+        if val:
+            robot_cmds[cmd](val)
+        else:
+            robot_cmds[cmd]
+
+        
+        
 if __name__ == '__main__':
-    s = '{"cmd": "forward", "val": "5.0"}'
-    a = App().process_message(s)
-    r = RobotModel()
-    r.left(1)  # поворот на 90 градусов
-    r.forward(1)
+    m1 = '{"cmd": "left", "val": "1.0"}' # поворот на 90 градусов
+    m2 = '{"cmd": "forward", "val": "1.0"}'
+    m3 = '{"cmd": "stop"}'
+    msgs = [m1, m1, m3]
+    app = App()
+
+    for msg in msgs: # эмуляция отправки команд
+        message = app.process_message(msg)
+        app.send_command_to_robot(message)
