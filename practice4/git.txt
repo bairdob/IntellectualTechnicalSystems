@@ -1,0 +1,3 @@
+git@github.com:DevDungeon/Cookbook
+git@github.com:bairdob/IntellectualTechnicalSystems.git
+git@github.cim:DevDungeon/Cookbooks
